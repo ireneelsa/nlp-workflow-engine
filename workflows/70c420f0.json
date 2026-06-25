@@ -1,0 +1,23 @@
+{
+  "id": "70c420f0",
+  "name": "give_me_time",
+  "description": "This workflow provides the current time to the user",
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "extract_time",
+      "tool_name": "ner",
+      "depends_on": [],
+      "input_map": {
+        "entity_types": [
+          "DATE"
+        ]
+      },
+      "status": "pending",
+      "output": null,
+      "error": null
+    }
+  ],
+  "status": "pending",
+  "created_at": "2026-04-30T15:44:39.704502"
+}

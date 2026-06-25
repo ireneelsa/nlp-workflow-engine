@@ -1,0 +1,23 @@
+{
+  "id": "5ed2a9b1",
+  "name": "place_name_extractor",
+  "description": "This workflow extracts place names from text",
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "extract_place_name",
+      "tool_name": "ner",
+      "depends_on": [],
+      "input_map": {
+        "entity_types": [
+          "LOCATION"
+        ]
+      },
+      "status": "pending",
+      "output": null,
+      "error": null
+    }
+  ],
+  "status": "pending",
+  "created_at": "2026-04-30T15:44:48.473837"
+}

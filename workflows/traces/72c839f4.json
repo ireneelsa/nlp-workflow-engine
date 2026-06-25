@@ -1,0 +1,88 @@
+{
+  "workflow_id": "72c839f4",
+  "workflow_name": "extract_and_summarize",
+  "goal": "Extract only the people and organizations mentioned, then summarize",
+  "steps_trace": [
+    {
+      "step_id": "step_1",
+      "step_name": "extract_entities",
+      "tool_name": "ner",
+      "input": {
+        "text": "Sundar Pichai visited Google's new office in London on March 5, 2026. He met with Microsoft CEO Satya Nadella to discuss an AI partnership. Both companies confirmed the deal would be announced at the World Economic Forum in Davos.",
+        "entity_types": [
+          "PERSON",
+          "ORG"
+        ]
+      },
+      "output": {
+        "entities": [
+          {
+            "text": "Sundar Pichai",
+            "type": "PERSON",
+            "start_index": 0
+          },
+          {
+            "text": "Google",
+            "type": "ORG",
+            "start_index": 17
+          },
+          {
+            "text": "Microsoft",
+            "type": "ORG",
+            "start_index": 51
+          },
+          {
+            "text": "Satya Nadella",
+            "type": "PERSON",
+            "start_index": 63
+          },
+          {
+            "text": "World Economic Forum",
+            "type": "ORG",
+            "start_index": 105
+          }
+        ],
+        "entity_types_requested": [
+          "PERSON",
+          "ORG"
+        ]
+      },
+      "error": null,
+      "duration_ms": 596.73,
+      "retries": 0,
+      "status": "done"
+    },
+    {
+      "step_id": "step_2",
+      "step_name": "summarize_text",
+      "tool_name": "summarizer",
+      "input": {
+        "text": "Sundar Pichai visited Google's new office in London on March 5, 2026. He met with Microsoft CEO Satya Nadella to discuss an AI partnership. Both companies confirmed the deal would be announced at the World Economic Forum in Davos."
+      },
+      "output": "Sundar Pichai visited Google's London office and met with Microsoft CEO Satya Nadella. They discussed a potential AI partnership between the two companies. The deal is expected to be announced at the World Economic Forum in Davos.",
+      "error": null,
+      "duration_ms": 321.96,
+      "retries": 0,
+      "status": "done"
+    }
+  ],
+  "reflections": [
+    {
+      "step_id": "step_1",
+      "goal_achieved": false,
+      "quality": "good",
+      "reason": "The output contains a list of extracted entities of types PERSON and ORG, which is useful for the overall goal but only completes the extraction part.",
+      "should_continue": true
+    },
+    {
+      "step_id": "step_2",
+      "goal_achieved": false,
+      "quality": "good",
+      "reason": "The output is a coherent summary but does not explicitly extract people and organizations as required by the overall goal.",
+      "should_continue": true
+    }
+  ],
+  "final_status": "done",
+  "total_duration_ms": 1695.13,
+  "total_tokens_used": 0
+}

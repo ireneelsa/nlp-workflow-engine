@@ -1,0 +1,38 @@
+{
+  "id": "064c850f",
+  "name": "intent_and_entity_extractor",
+  "description": "This workflow determines the intent of a piece of text and extracts relevant entities from it",
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "classify_intent",
+      "tool_name": "intent_classifier",
+      "depends_on": [],
+      "input_map": {},
+      "status": "pending",
+      "output": null,
+      "error": null
+    },
+    {
+      "id": "step_2",
+      "name": "extract_entities",
+      "tool_name": "ner",
+      "depends_on": [
+        "step_1"
+      ],
+      "input_map": {
+        "entity_types": [
+          "PERSON",
+          "ORG",
+          "LOCATION",
+          "DATE"
+        ]
+      },
+      "status": "pending",
+      "output": null,
+      "error": null
+    }
+  ],
+  "status": "pending",
+  "created_at": "2026-06-04T11:58:52.228669"
+}

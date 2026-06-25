@@ -1,0 +1,45 @@
+{
+  "id": "c3d68c09",
+  "name": "extract_and_summarize",
+  "description": "Extracts entities, classifies intent, and summarizes the given passage",
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "extract_entities",
+      "tool_name": "ner",
+      "depends_on": [],
+      "input_map": {
+        "entity_types": [
+          "PERSON",
+          "ORG",
+          "LOCATION"
+        ]
+      },
+      "status": "pending",
+      "output": null,
+      "error": null
+    },
+    {
+      "id": "step_2",
+      "name": "classify_intent",
+      "tool_name": "intent_classifier",
+      "depends_on": [],
+      "input_map": {},
+      "status": "pending",
+      "output": null,
+      "error": null
+    },
+    {
+      "id": "step_3",
+      "name": "summarize_passage",
+      "tool_name": "summarizer",
+      "depends_on": [],
+      "input_map": {},
+      "status": "pending",
+      "output": null,
+      "error": null
+    }
+  ],
+  "status": "pending",
+  "created_at": "2026-06-04T14:38:58.156970"
+}

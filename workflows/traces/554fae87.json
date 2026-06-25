@@ -1,0 +1,159 @@
+{
+  "workflow_id": "554fae87",
+  "workflow_name": "summarize_and_extract",
+  "goal": "summarise and who are people and give locations as well, and give intetn",
+  "steps_trace": [
+    {
+      "step_id": "step_1",
+      "step_name": "Summarize Text",
+      "tool_name": "summarizer",
+      "input": {
+        "text": "Irene Elsa Arun\nShe/Her\n\nAdd verification badge\n\nVIT Chennai | CSE AI & ML | AI Developer | Building Multi-Agent Systems, AI Bots & LLM Applications | Python, LangChain, FastAPI, React\n\nChennai, Tamil Nadu, India\n\n\u00b7\n\nContact info\n\n\nEntrans Inc.\n\n\nVellore Institute of Technology\n\n105 connections\n\n\nOpen to\nAdd section\n\nEnhance profile\n\nResources\nOpen to work \u00b7 Recruiters only\n\nChennai +3 more | On-site \u00b7 Hybrid \u00b7 Remote\n\nShow details\n\n\nShare that you\u2019re hiring and attract qualified candidates.\n\nGet started\n\n\nShowcase your services as a section on your profile so your business can be easily discovered.\n\nAdd services\n\n\nTell non-profits you are interested in getting involved with your time and skills\n\nGet started\n\n\n\nSuggested for you\nPrivate to you\n\nEnhance your profile\n\nStand out for almost 2x as many opportunities with the help of AI and much more.\n\nEnhance with AI\nAnalytics\nPrivate to you\n\n110 profile views\n\nDiscover who\u2019s viewed your profile.\n\n0 post impressions\n\nStart a post to increase engagement.\n\nPast 7 days\n\n45 search appearances\n\nSee how often you appear in search results.\n\nShow all\nActivity\n105 followers\n\nCreate a post\nYou haven\u2019t posted yet\n\nPosts you share will be displayed here.\n\nShow all\nExperience\n\nEntrans Inc. logo\nArtificial Intelligence Intern\n\nEntrans Inc. \u00b7 Internship\n\nApr 2026 - Present \u00b7 2 mos\n\nChennai, Tamil Nadu, India \u00b7 On-site\n\niSYS Technologies logo\nIntern\n\niSYS Technologies \u00b7 Internship\n\nJun 2025 - Jul 2025 \u00b7 2 mos\n\nChennai, Tamil Nadu, India \u00b7 Hybrid\n\nDeveloped an AI-driven system that recommends the most suitable crops for a given region based on soil, weather, and environmental conditions. It also suggests the optimal sowing time to maximize yield, \nensuring sustainable and efficient farming practices.\u2026 more\n\n Machine Learning and Artificial Intelligence (AI)\n\nPT TDK ELECTRONICS INDONESIA logo\nOperation Technology Intern\n\nPT TDK ELECTRONICS INDONESIA \u00b7 Internship\n\nMay 2024 - Jun 2024 \u00b7 2 mos\n\nBatam, Indonesia \u00b7 On-site\n\nI completed a one-month internship in the Maintenance Operation Technology Department, where I developed an ML-based prototype to improve workplace safety and ensure regulatory compliance. The project included a Hazard Observation System to detect unsafe situations, such as multiple workers staying at one workstation for over a certain time limit, and a Restricted Area Monitoring System to log time spent in stock rooms. Using YOLO and OpenCV, the system analyzed CCTV footage to identify past safety violations. This experience strengthened my skills in machine learning, computer vision, and practical problem solving.\u2026 more\n\n Python (Programming Language), Machine Learning and +1 skill\n\nEducation\nVellore Institute of Technology logo\nVellore Institute of Technology\n\nB.Tech, CSE in AI & ML\n\nSep 2022 \u2013 Jun 2026\n\nActivities and societies: - FilmSoc Club\n- Google Developer's Group Club\n- Android Club\n\n Deep Learning, Machine Learning and +1 skill\n\nSekolah Global Indo-Asia\n\nInternational Baccalaureate Diploma Programme (IBDP), Mathematics AA HL | Chemistry HL | Physics HL | Business SL | English A LL SL | Indonesian AB SL\n\nJul 2020 \u2013 May 2022\n\nGrade: 34/45\n\nActivities and societies: - SGIA HMCA & MUN Club Member\n- SGIA Environmental Club Member\n- Layout designer for SGIA school magazine\n- Participated in a Kyushu Institute Technology competition.\n\n+ Extended Essay in English A\n\nShow all\nLicenses & certifications\nOracle logo\nOracle Cloud Infrastructure 2025 Certified Generative AI Professional\n\nOracle\n\nIssued Jul 2025 \u00b7 Expires Jul 2027\n\n Generative AI\n\nThumbnail for Oracle ecert_Irene.pdf\nOracle ecert_Irene.pdf\n\nSkills\nArtificial Intelligence (AI)\n\n\nIntern at iSYS Technologies\n\nGenerative AI\n\n\nOracle Cloud Infrastructure 2025 Certified Generative AI Professional"
+      },
+      "output": "Irene Elsa Arun is an AI developer with experience in building multi-agent systems, AI bots, and LLM applications, currently working as an Artificial Intelligence Intern at Entrans Inc. She has a strong background in machine learning and artificial intelligence, with a B.Tech degree in CSE AI & ML from Vellore Institute of Technology. Irene has also completed internships at iSYS Technologies and PT TDK ELECTRONICS INDONESIA, where she developed AI-driven systems and prototypes to improve workplace safety and farming practices.",
+      "error": null,
+      "duration_ms": 603.54,
+      "retries": 0,
+      "status": "done"
+    },
+    {
+      "step_id": "step_2",
+      "step_name": "Extract Entities",
+      "tool_name": "ner",
+      "input": {
+        "text": "Irene Elsa Arun\nShe/Her\n\nAdd verification badge\n\nVIT Chennai | CSE AI & ML | AI Developer | Building Multi-Agent Systems, AI Bots & LLM Applications | Python, LangChain, FastAPI, React\n\nChennai, Tamil Nadu, India\n\n\u00b7\n\nContact info\n\n\nEntrans Inc.\n\n\nVellore Institute of Technology\n\n105 connections\n\n\nOpen to\nAdd section\n\nEnhance profile\n\nResources\nOpen to work \u00b7 Recruiters only\n\nChennai +3 more | On-site \u00b7 Hybrid \u00b7 Remote\n\nShow details\n\n\nShare that you\u2019re hiring and attract qualified candidates.\n\nGet started\n\n\nShowcase your services as a section on your profile so your business can be easily discovered.\n\nAdd services\n\n\nTell non-profits you are interested in getting involved with your time and skills\n\nGet started\n\n\n\nSuggested for you\nPrivate to you\n\nEnhance your profile\n\nStand out for almost 2x as many opportunities with the help of AI and much more.\n\nEnhance with AI\nAnalytics\nPrivate to you\n\n110 profile views\n\nDiscover who\u2019s viewed your profile.\n\n0 post impressions\n\nStart a post to increase engagement.\n\nPast 7 days\n\n45 search appearances\n\nSee how often you appear in search results.\n\nShow all\nActivity\n105 followers\n\nCreate a post\nYou haven\u2019t posted yet\n\nPosts you share will be displayed here.\n\nShow all\nExperience\n\nEntrans Inc. logo\nArtificial Intelligence Intern\n\nEntrans Inc. \u00b7 Internship\n\nApr 2026 - Present \u00b7 2 mos\n\nChennai, Tamil Nadu, India \u00b7 On-site\n\niSYS Technologies logo\nIntern\n\niSYS Technologies \u00b7 Internship\n\nJun 2025 - Jul 2025 \u00b7 2 mos\n\nChennai, Tamil Nadu, India \u00b7 Hybrid\n\nDeveloped an AI-driven system that recommends the most suitable crops for a given region based on soil, weather, and environmental conditions. It also suggests the optimal sowing time to maximize yield, \nensuring sustainable and efficient farming practices.\u2026 more\n\n Machine Learning and Artificial Intelligence (AI)\n\nPT TDK ELECTRONICS INDONESIA logo\nOperation Technology Intern\n\nPT TDK ELECTRONICS INDONESIA \u00b7 Internship\n\nMay 2024 - Jun 2024 \u00b7 2 mos\n\nBatam, Indonesia \u00b7 On-site\n\nI completed a one-month internship in the Maintenance Operation Technology Department, where I developed an ML-based prototype to improve workplace safety and ensure regulatory compliance. The project included a Hazard Observation System to detect unsafe situations, such as multiple workers staying at one workstation for over a certain time limit, and a Restricted Area Monitoring System to log time spent in stock rooms. Using YOLO and OpenCV, the system analyzed CCTV footage to identify past safety violations. This experience strengthened my skills in machine learning, computer vision, and practical problem solving.\u2026 more\n\n Python (Programming Language), Machine Learning and +1 skill\n\nEducation\nVellore Institute of Technology logo\nVellore Institute of Technology\n\nB.Tech, CSE in AI & ML\n\nSep 2022 \u2013 Jun 2026\n\nActivities and societies: - FilmSoc Club\n- Google Developer's Group Club\n- Android Club\n\n Deep Learning, Machine Learning and +1 skill\n\nSekolah Global Indo-Asia\n\nInternational Baccalaureate Diploma Programme (IBDP), Mathematics AA HL | Chemistry HL | Physics HL | Business SL | English A LL SL | Indonesian AB SL\n\nJul 2020 \u2013 May 2022\n\nGrade: 34/45\n\nActivities and societies: - SGIA HMCA & MUN Club Member\n- SGIA Environmental Club Member\n- Layout designer for SGIA school magazine\n- Participated in a Kyushu Institute Technology competition.\n\n+ Extended Essay in English A\n\nShow all\nLicenses & certifications\nOracle logo\nOracle Cloud Infrastructure 2025 Certified Generative AI Professional\n\nOracle\n\nIssued Jul 2025 \u00b7 Expires Jul 2027\n\n Generative AI\n\nThumbnail for Oracle ecert_Irene.pdf\nOracle ecert_Irene.pdf\n\nSkills\nArtificial Intelligence (AI)\n\n\nIntern at iSYS Technologies\n\nGenerative AI\n\n\nOracle Cloud Infrastructure 2025 Certified Generative AI Professional",
+        "entity_types": [
+          "PERSON",
+          "LOCATION"
+        ],
+        "step_1_output": "Irene Elsa Arun is an AI developer with experience in building multi-agent systems, AI bots, and LLM applications, currently working as an Artificial Intelligence Intern at Entrans Inc. She has a strong background in machine learning and artificial intelligence, with a B.Tech degree in CSE AI & ML from Vellore Institute of Technology. Irene has also completed internships at iSYS Technologies and PT TDK ELECTRONICS INDONESIA, where she developed AI-driven systems and prototypes to improve workplace safety and farming practices."
+      },
+      "output": {
+        "entities": [
+          {
+            "text": "Irene Elsa Arun",
+            "type": "PERSON",
+            "start_index": 0
+          },
+          {
+            "text": "Chennai",
+            "type": "LOCATION",
+            "start_index": 103
+          },
+          {
+            "text": "Tamil Nadu",
+            "type": "LOCATION",
+            "start_index": 111
+          },
+          {
+            "text": "India",
+            "type": "LOCATION",
+            "start_index": 122
+          },
+          {
+            "text": "Vellore",
+            "type": "LOCATION",
+            "start_index": 155
+          },
+          {
+            "text": "VIT Chennai",
+            "type": "LOCATION",
+            "start_index": 103
+          },
+          {
+            "text": "Chennai",
+            "type": "LOCATION",
+            "start_index": 241
+          },
+          {
+            "text": "Tamil Nadu",
+            "type": "LOCATION",
+            "start_index": 249
+          },
+          {
+            "text": "India",
+            "type": "LOCATION",
+            "start_index": 260
+          },
+          {
+            "text": "Chennai",
+            "type": "LOCATION",
+            "start_index": 335
+          },
+          {
+            "text": "Batam",
+            "type": "LOCATION",
+            "start_index": 583
+          },
+          {
+            "text": "Indonesia",
+            "type": "LOCATION",
+            "start_index": 590
+          },
+          {
+            "text": "Vellore Institute of Technology",
+            "type": "LOCATION",
+            "start_index": 702
+          },
+          {
+            "text": "Chennai",
+            "type": "LOCATION",
+            "start_index": 864
+          }
+        ],
+        "entity_types_requested": [
+          "PERSON",
+          "LOCATION"
+        ]
+      },
+      "error": null,
+      "duration_ms": 902.36,
+      "retries": 0,
+      "status": "done"
+    },
+    {
+      "step_id": "step_3",
+      "step_name": "Classify Intent",
+      "tool_name": "intent_classifier",
+      "input": {
+        "text": "Irene Elsa Arun\nShe/Her\n\nAdd verification badge\n\nVIT Chennai | CSE AI & ML | AI Developer | Building Multi-Agent Systems, AI Bots & LLM Applications | Python, LangChain, FastAPI, React\n\nChennai, Tamil Nadu, India\n\n\u00b7\n\nContact info\n\n\nEntrans Inc.\n\n\nVellore Institute of Technology\n\n105 connections\n\n\nOpen to\nAdd section\n\nEnhance profile\n\nResources\nOpen to work \u00b7 Recruiters only\n\nChennai +3 more | On-site \u00b7 Hybrid \u00b7 Remote\n\nShow details\n\n\nShare that you\u2019re hiring and attract qualified candidates.\n\nGet started\n\n\nShowcase your services as a section on your profile so your business can be easily discovered.\n\nAdd services\n\n\nTell non-profits you are interested in getting involved with your time and skills\n\nGet started\n\n\n\nSuggested for you\nPrivate to you\n\nEnhance your profile\n\nStand out for almost 2x as many opportunities with the help of AI and much more.\n\nEnhance with AI\nAnalytics\nPrivate to you\n\n110 profile views\n\nDiscover who\u2019s viewed your profile.\n\n0 post impressions\n\nStart a post to increase engagement.\n\nPast 7 days\n\n45 search appearances\n\nSee how often you appear in search results.\n\nShow all\nActivity\n105 followers\n\nCreate a post\nYou haven\u2019t posted yet\n\nPosts you share will be displayed here.\n\nShow all\nExperience\n\nEntrans Inc. logo\nArtificial Intelligence Intern\n\nEntrans Inc. \u00b7 Internship\n\nApr 2026 - Present \u00b7 2 mos\n\nChennai, Tamil Nadu, India \u00b7 On-site\n\niSYS Technologies logo\nIntern\n\niSYS Technologies \u00b7 Internship\n\nJun 2025 - Jul 2025 \u00b7 2 mos\n\nChennai, Tamil Nadu, India \u00b7 Hybrid\n\nDeveloped an AI-driven system that recommends the most suitable crops for a given region based on soil, weather, and environmental conditions. It also suggests the optimal sowing time to maximize yield, \nensuring sustainable and efficient farming practices.\u2026 more\n\n Machine Learning and Artificial Intelligence (AI)\n\nPT TDK ELECTRONICS INDONESIA logo\nOperation Technology Intern\n\nPT TDK ELECTRONICS INDONESIA \u00b7 Internship\n\nMay 2024 - Jun 2024 \u00b7 2 mos\n\nBatam, Indonesia \u00b7 On-site\n\nI completed a one-month internship in the Maintenance Operation Technology Department, where I developed an ML-based prototype to improve workplace safety and ensure regulatory compliance. The project included a Hazard Observation System to detect unsafe situations, such as multiple workers staying at one workstation for over a certain time limit, and a Restricted Area Monitoring System to log time spent in stock rooms. Using YOLO and OpenCV, the system analyzed CCTV footage to identify past safety violations. This experience strengthened my skills in machine learning, computer vision, and practical problem solving.\u2026 more\n\n Python (Programming Language), Machine Learning and +1 skill\n\nEducation\nVellore Institute of Technology logo\nVellore Institute of Technology\n\nB.Tech, CSE in AI & ML\n\nSep 2022 \u2013 Jun 2026\n\nActivities and societies: - FilmSoc Club\n- Google Developer's Group Club\n- Android Club\n\n Deep Learning, Machine Learning and +1 skill\n\nSekolah Global Indo-Asia\n\nInternational Baccalaureate Diploma Programme (IBDP), Mathematics AA HL | Chemistry HL | Physics HL | Business SL | English A LL SL | Indonesian AB SL\n\nJul 2020 \u2013 May 2022\n\nGrade: 34/45\n\nActivities and societies: - SGIA HMCA & MUN Club Member\n- SGIA Environmental Club Member\n- Layout designer for SGIA school magazine\n- Participated in a Kyushu Institute Technology competition.\n\n+ Extended Essay in English A\n\nShow all\nLicenses & certifications\nOracle logo\nOracle Cloud Infrastructure 2025 Certified Generative AI Professional\n\nOracle\n\nIssued Jul 2025 \u00b7 Expires Jul 2027\n\n Generative AI\n\nThumbnail for Oracle ecert_Irene.pdf\nOracle ecert_Irene.pdf\n\nSkills\nArtificial Intelligence (AI)\n\n\nIntern at iSYS Technologies\n\nGenerative AI\n\n\nOracle Cloud Infrastructure 2025 Certified Generative AI Professional",
+        "step_1_output": "Irene Elsa Arun is an AI developer with experience in building multi-agent systems, AI bots, and LLM applications, currently working as an Artificial Intelligence Intern at Entrans Inc. She has a strong background in machine learning and artificial intelligence, with a B.Tech degree in CSE AI & ML from Vellore Institute of Technology. Irene has also completed internships at iSYS Technologies and PT TDK ELECTRONICS INDONESIA, where she developed AI-driven systems and prototypes to improve workplace safety and farming practices."
+      },
+      "output": {
+        "intent": "other",
+        "confidence": 0.9,
+        "reason": "The text appears to be a LinkedIn profile or resume, which does not express a specific question, complaint, request, or feedback."
+      },
+      "error": null,
+      "duration_ms": 465.7,
+      "retries": 0,
+      "status": "done"
+    }
+  ],
+  "reflections": [
+    {
+      "step_id": "step_1",
+      "goal_achieved": false,
+      "quality": "good",
+      "reason": "The output provides a summary of a person, including their background and experience, but does not fully achieve the overall goal as it lacks explicit mention of intent and locations.",
+      "should_continue": true
+    },
+    {
+      "step_id": "step_2",
+      "goal_achieved": false,
+      "quality": "good",
+      "reason": "The step produced useful output by extracting entities including people and locations, but further processing is needed to achieve the overall goal of summarizing and providing intent.",
+      "should_continue": true
+    },
+    {
+      "step_id": "step_3",
+      "goal_achieved": false,
+      "quality": "good",
+      "reason": "The step produced useful output by classifying the intent, but it does not provide information about people, locations, or a summary, which are also required to achieve the overall goal.",
+      "should_continue": true
+    }
+  ],
+  "final_status": "done",
+  "total_duration_ms": 3385.29,
+  "total_tokens_used": 0
+}

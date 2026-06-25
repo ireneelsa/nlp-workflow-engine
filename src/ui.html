@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NLP Workflow Engine</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+  .header { background: #1a1d2e; border-bottom: 1px solid #2d3148; padding: 20px 32px; display: flex; align-items: center; gap: 12px; }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .badge { background: #3b4fd8; color: white; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+  .card { background: #1a1d2e; border: 1px solid #2d3148; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 6px; font-weight: 500; }
+  input, textarea, select { width: 100%; background: #0f1117; border: 1px solid #2d3148; border-radius: 8px; color: #e2e8f0; padding: 10px 14px; font-size: 14px; outline: none; font-family: inherit; }
+  input:focus, textarea:focus, select:focus { border-color: #3b4fd8; }
+  textarea { resize: vertical; min-height: 140px; }
+  .btn { background: #3b4fd8; color: white; border: none; border-radius: 8px; padding: 12px 28px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 16px; }
+  .btn:hover { background: #4f63e8; }
+  .btn:disabled { background: #2d3148; color: #64748b; cursor: not-allowed; }
+  .status { font-size: 13px; color: #64748b; text-align: center; margin-top: 10px; min-height: 20px; }
+  .results { display: none; }
+  .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .result-header h2 { font-size: 15px; font-weight: 600; }
+  .pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .pill-done { background: #14532d; color: #4ade80; }
+  .pill-failed { background: #450a0a; color: #f87171; }
+  .step-card { background: #0f1117; border: 1px solid #2d3148; border-radius: 8px; padding: 16px; margin-bottom: 10px; }
+  .step-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .step-name { font-size: 14px; font-weight: 500; }
+  .step-tool { font-size: 11px; color: #94a3b8; background: #1a1d2e; padding: 2px 8px; border-radius: 4px; }
+  .step-output { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-top: 8px; white-space: pre-wrap; word-break: break-word; }
+  .step-ms { font-size: 11px; color: #475569; margin-top: 6px; }
+  .reflection { font-size: 12px; color: #64748b; margin-top: 6px; font-style: italic; border-top: 1px solid #2d3148; padding-top: 6px; }
+  .q-good { color: #4ade80; } .q-poor { color: #fbbf24; } .q-failed { color: #f87171; }
+  .timing { text-align: right; font-size: 12px; color: #475569; margin-top: 12px; }
+  .example-btn { background: transparent; border: 1px solid #2d3148; border-radius: 6px; color: #94a3b8; font-size: 12px; padding: 4px 10px; cursor: pointer; margin-right: 6px; margin-top: 8px; }
+  .example-btn:hover { border-color: #3b4fd8; color: #e2e8f0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>NLP Workflow Engine</h1>
+  <span class="badge">LLM-Planned Agent</span>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div style="margin-bottom:16px">
+      <label>Goal — what do you want to do with the text?</label>
+      <input type="text" id="goal" placeholder="e.g. Analyze this news article and extract key information"/>
+      <div style="margin-top:8px">
+        <button class="example-btn" onclick="setExample('news')">News article</button>
+        <button class="example-btn" onclick="setExample('support')">Support ticket</button>
+        <button class="example-btn" onclick="setExample('bio')">Biography</button>
+      </div>
+    </div>
+    <div>
+      <label>Text — paste any text here</label>
+      <textarea id="text" placeholder="Paste your text here..."></textarea>
+    </div>
+    <button class="btn" id="runBtn" onclick="runWorkflow()">Run Workflow</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="results card" id="results">
+    <div class="result-header">
+      <div>
+        <h2 id="workflowName"></h2>
+        <div style="font-size:12px; color:#64748b; margin-top:2px" id="workflowId"></div>
+      </div>
+      <span class="pill" id="statusPill"></span>
+    </div>
+    <div id="stepsContainer"></div>
+    <div class="timing" id="timing"></div>
+  </div>
+</div>
+
+<script>
+const examples = {
+  news: {
+    goal: "Extract key entities, classify intent, and summarize this news article",
+    text: `Elon Musk announced on Monday that Tesla will open a new Gigafactory in Chennai, India by 2027. The facility is expected to produce 500,000 electric vehicles annually and will create over 10,000 local jobs. Indian Prime Minister Narendra Modi welcomed the decision, calling it a landmark moment for India's clean energy future.`
+  },
+  support: {
+    goal: "Classify the intent and summarize this customer support message",
+    text: `Hi, I've been trying to log into my account for the past three days and keep getting an 'invalid credentials' error even though I just reset my password. I'm really frustrated because I have an important deadline and need access to my files urgently. Please help me resolve this as soon as possible.`
+  },
+  bio: {
+    goal: "Extract all named entities and summarize this biography",
+    text: `Sundar Pichai was born in Chennai, India in 1972. He studied metallurgical engineering at IIT Kharagpur before moving to the United States to pursue a Master's degree at Stanford University. He later earned an MBA from the Wharton School. Pichai joined Google in 2004 and became CEO in 2015. Under his leadership, Google expanded its AI research significantly, launching products like Bard and Gemini.`
+  }
+};
+
+function setExample(type) {
+  document.getElementById("goal").value = examples[type].goal;
+  document.getElementById("text").value = examples[type].text;
+}
+
+async function runWorkflow() {
+  const goal = document.getElementById("goal").value.trim();
+  const text = document.getElementById("text").value.trim();
+  if (!goal || !text) { alert("Please fill in both goal and text."); return; }
+
+  const btn = document.getElementById("runBtn");
+  const status = document.getElementById("status");
+  btn.disabled = true;
+  btn.textContent = "Running...";
+  status.textContent = "Planning workflow...";
+  document.getElementById("results").style.display = "none";
+
+  try {
+    status.textContent = "Agent is planning and executing steps...";
+    const res = await fetch("/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goal, text })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Server error");
+    }
+
+    const data = await res.json();
+    displayResults(data);
+    status.textContent = "";
+  } catch (e) {
+    status.textContent = "Error: " + e.message;
+    status.style.color = "#f87171";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Run Workflow";
+  }
+}
+
+async function streamWorkflow() {
+  const goal = document.getElementById("goal").value.trim();
+  const text = document.getElementById("text").value.trim();
+  if (!goal || !text) { alert("Please fill in both goal and text."); return; }
+
+  const btnStream = document.getElementById("streamBtn");
+  const btnRun = document.getElementById("runBtn");
+  const status = document.getElementById("status");
+  btnStream.disabled = true;
+  btnRun.disabled = true;
+  btnStream.textContent = "Streaming...";
+  status.textContent = "Planning workflow...";
+  document.getElementById("results").style.display = "none";
+  
+  // Clear steps container for a new run
+  const container = document.getElementById("stepsContainer");
+  container.innerHTML = "";
+  document.getElementById("timing").textContent = "";
+  document.getElementById("statusPill").textContent = "";
+
+  try {
+    const res = await fetch("/run/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goal, text })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Server error");
+    }
+
+    status.textContent = "Agent is streaming steps...";
+    document.getElementById("results").style.display = "block";
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop(); // keep the last incomplete chunk
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = JSON.parse(line.substring(6));
+          handleStreamEvent(data);
+        }
+      }
+    }
+    
+    if (buffer.startsWith("data: ")) {
+       const data = JSON.parse(buffer.substring(6));
+       handleStreamEvent(data);
+    }
+
+    status.textContent = "";
+  } catch (e) {
+    status.textContent = "Error: " + e.message;
+    status.style.color = "#f87171";
+  } finally {
+    btnStream.disabled = false;
+    btnRun.disabled = false;
+    btnStream.textContent = "Stream Results";
+  }
+}
+
+function handleStreamEvent(data) {
+  if (data.type === "init") {
+    document.getElementById("workflowName").textContent = data.workflow_name;
+    document.getElementById("workflowId").textContent = "ID: " + data.workflow_id;
+    document.getElementById("statusPill").textContent = "running";
+    document.getElementById("statusPill").className = "pill";
+  } else if (data.type === "step") {
+    const step = data.step;
+    const refl = data.reflection;
+    const outputStr = formatOutput(step.output);
+    const reflHtml = refl ? `<div class="reflection">
+      Reflection: <span class="q-${refl.quality}">${refl.quality}</span> — ${refl.reason}
+    </div>` : "";
+    
+    const stepHtml = `<div class="step-card">
+      <div class="step-top">
+        <span class="step-name">${step.step_name}</span>
+        <span class="step-tool">${step.tool_name}</span>
+      </div>
+      <div class="step-output">${outputStr}</div>
+      <div class="step-ms">${step.duration_ms}ms</div>
+      ${reflHtml}
+    </div>`;
+    
+    const container = document.getElementById("stepsContainer");
+    container.insertAdjacentHTML('beforeend', stepHtml);
+  } else if (data.type === "done") {
+    const pill = document.getElementById("statusPill");
+    pill.textContent = data.status;
+    pill.className = "pill " + (data.status === "done" ? "pill-done" : "pill-failed");
+    document.getElementById("timing").textContent = `Total: ${data.total_duration_ms}ms`;
+  }
+}
+
+function displayResults(data) {
+  document.getElementById("workflowName").textContent = data.workflow_name;
+  document.getElementById("workflowId").textContent = "ID: " + data.workflow_id;
+
+  const pill = document.getElementById("statusPill");
+  pill.textContent = data.status;
+  pill.className = "pill " + (data.status === "done" ? "pill-done" : "pill-failed");
+
+  const reflMap = {};
+  data.reflections.forEach(r => { reflMap[r.step_id] = r; });
+
+  const container = document.getElementById("stepsContainer");
+  container.innerHTML = data.steps.map((step, i) => {
+    const refl = reflMap[`step_${i+1}`] || data.reflections[i] || null;
+    const outputStr = formatOutput(step.output);
+    const reflHtml = refl ? `<div class="reflection">
+      Reflection: <span class="q-${refl.quality}">${refl.quality}</span> — ${refl.reason}
+    </div>` : "";
+    return `<div class="step-card">
+      <div class="step-top">
+        <span class="step-name">${step.step_name}</span>
+        <span class="step-tool">${step.tool_name}</span>
+      </div>
+      <div class="step-output">${outputStr}</div>
+      <div class="step-ms">${step.duration_ms}ms</div>
+      ${reflHtml}
+    </div>`;
+  }).join("");
+
+  document.getElementById("timing").textContent = `Total: ${data.total_duration_ms}ms`;
+  document.getElementById("results").style.display = "block";
+}
+
+function formatOutput(output) {
+  if (!output) return "No output";
+  if (typeof output === "string") return output;
+  if (output.entities) {
+    return output.entities.map(e => `[${e.type}] ${e.text}`).join("\n") || "No entities found";
+  }
+  if (output.intent) return `Intent: ${output.intent} (confidence: ${output.confidence})\n${output.reason}`;
+  return JSON.stringify(output, null, 2);
+}
+</script>
+<div class="container">
+  <div class="card" style="margin-top: 0">
+    <h2 style="font-size:15px; font-weight:600; margin-bottom:16px">
+      Document Q&A — RAG
+    </h2>
+
+    <div style="margin-bottom:16px">
+      <label>Upload documents (.txt, .pdf) and/or images (.jpg, .png)</label>
+      <input type="file" id="fileInput" accept=".txt,.pdf,.jpg,.jpeg,.png" multiple
+        style="padding:8px; cursor:pointer"/>
+      <button class="btn" style="margin-top:10px"
+        onclick="uploadFile()">Upload & Index Document</button>
+      <div class="status" id="uploadStatus"></div>
+      <div id="uploadResults" style="display:none; margin-top:14px"></div>
+    </div>
+
+    <div id="ragSection" style="display:none">
+      <hr style="border-color:#2d3148; margin: 16px 0"/>
+      <label>Select uploaded collection</label>
+      <select id="collectionSelect" style="margin-bottom:12px"></select>
+      <label>Ask a question about your document</label>
+      <input type="text" id="ragQuestion"
+        placeholder="e.g. What are the main findings?"/>
+      <div style="margin-top:8px">
+        <button class="example-btn"
+          onclick="setRagQuestion('What is the main topic of this document?')">
+          Main topic
+        </button>
+        <button class="example-btn"
+          onclick="setRagQuestion('Who are the key people mentioned?')">
+          Key people
+        </button>
+        <button class="example-btn"
+          onclick="setRagQuestion('What are the key dates or deadlines mentioned?')">
+          Key dates
+        </button>
+      </div>
+      <button class="btn" style="margin-top:12px"
+        onclick="askQuestion()">Ask Question</button>
+      <div class="status" id="ragStatus"></div>
+
+      <div id="ragAnswer" style="display:none"
+        class="step-card" style="margin-top:14px">
+        <div class="step-name">Answer</div>
+        <div class="step-output" id="ragAnswerText"></div>
+        <div class="step-ms" id="ragMeta"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allCollections = [];
+
+function setRagQuestion(q) {
+  document.getElementById("ragQuestion").value = q;
+}
+
+async function uploadFile() {
+  const fileInput = document.getElementById("fileInput");
+  const status = document.getElementById("uploadStatus");
+  const uploadResults = document.getElementById("uploadResults");
+
+  if (!fileInput.files.length) {
+    alert("Please select a .txt, .pdf, .jpg, .jpeg, or .png file first");
+    return;
+  }
+
+  status.textContent = "Uploading and indexing...";
+  status.style.color = "#94a3b8";
+  uploadResults.style.display = "none";
+  uploadResults.innerHTML = "";
+
+  const formData = new FormData();
+  Array.from(fileInput.files).forEach(file => {
+    formData.append("files", file);
+  });
+
+  try {
+    const res = await fetch("/upload", { method: "POST", body: formData });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail);
+    }
+    const data = await res.json();
+    data.results.forEach(result => {
+      allCollections.push({
+        filename: result.filename,
+        collection_name: result.collection_name,
+        file_type: result.file_type,
+        chunks: result.chunks
+      });
+    });
+
+    renderUploadResults(allCollections);
+    renderCollectionOptions(allCollections);
+
+    status.textContent = `Indexed ${data.total_files} files with ${data.total_chunks} total chunks. Ready to answer questions.`;
+    status.style.color = "#4ade80";
+    document.getElementById("ragSection").style.display = "block";
+  } catch (e) {
+    status.textContent = "Error: " + e.message;
+    status.style.color = "#f87171";
+  }
+}
+
+function renderUploadResults(results) {
+  const uploadResults = document.getElementById("uploadResults");
+  uploadResults.innerHTML = results.map(result => {
+    const chunksLine = typeof result.chunks === "number"
+      ? `${result.chunks} chunks indexed`
+      : "Previously indexed";
+    return `
+    <div class="step-card">
+      <div class="step-top">
+        <span class="step-name">${escapeHtml(result.filename)}</span>
+        <span class="step-tool">${escapeHtml(result.file_type)}</span>
+        <button onclick="deleteCollection('${escapeHtml(result.collection_name)}')"
+          style="background:#7f1d1d;color:#fca5a5;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;margin-left:auto;">
+          Delete
+        </button>
+      </div>
+      <div class="step-output">${chunksLine}</div>
+      <div class="step-ms">collection: ${escapeHtml(result.collection_name)}</div>
+    </div>`;
+  }).join("");
+  uploadResults.style.display = results.length ? "block" : "none";
+}
+
+function renderCollectionOptions(results) {
+  const select = document.getElementById("collectionSelect");
+  select.innerHTML = results.map(result => `
+    <option value="${escapeHtml(result.collection_name)}">
+      ${escapeHtml(result.filename)} (${escapeHtml(result.collection_name)})
+    </option>
+  `).join("");
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+async function deleteCollection(collectionName) {
+  try {
+    const res = await fetch(`/collections/${encodeURIComponent(collectionName)}`, {
+      method: "DELETE"
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Delete failed");
+    }
+    allCollections = allCollections.filter(c => c.collection_name !== collectionName);
+    renderUploadResults(allCollections);
+    renderCollectionOptions(allCollections);
+    if (allCollections.length === 0) {
+      document.getElementById("ragSection").style.display = "none";
+      document.getElementById("uploadResults").style.display = "none";
+    }
+  } catch (e) {
+    alert("Failed to delete collection: " + e.message);
+  }
+}
+
+async function loadExistingCollections() {
+  try {
+    const res = await fetch("/collections");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.collections || !data.collections.length) return;
+    data.collections.forEach(name => {
+      if (!allCollections.find(c => c.collection_name === name)) {
+        allCollections.push({
+          filename: name,
+          collection_name: name,
+          file_type: "Previously indexed",
+          chunks: "–"
+        });
+      }
+    });
+    renderUploadResults(allCollections);
+    renderCollectionOptions(allCollections);
+    document.getElementById("uploadResults").style.display = "block";
+    document.getElementById("ragSection").style.display = "block";
+  } catch (e) {
+    // Silently fail — server may not be ready
+  }
+}
+
+window.onload = loadExistingCollections;
+
+async function askQuestion() {
+  const question = document.getElementById("ragQuestion").value.trim();
+  const status = document.getElementById("ragStatus");
+  const collectionName = document.getElementById("collectionSelect").value;
+
+  if (!question) { alert("Please enter a question"); return; }
+  if (!collectionName) { alert("Please upload a document first"); return; }
+
+  status.textContent = "Searching document...";
+  status.style.color = "#94a3b8";
+
+  try {
+    const res = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: question,
+        collection_name: collectionName
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail);
+    }
+
+    const data = await res.json();
+    status.textContent = "";
+    document.getElementById("ragAnswer").style.display = "block";
+    document.getElementById("ragAnswerText").textContent = data.answer;
+    document.getElementById("ragMeta").textContent =
+      `${data.duration_ms}ms · ${data.chunks_used} chunks searched · collection: ${data.collection}`;
+
+  } catch (e) {
+    status.textContent = "Error: " + e.message;
+    status.style.color = "#f87171";
+  }
+}
+</script>
+</body>
+</html>

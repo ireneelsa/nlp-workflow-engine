@@ -1,0 +1,9 @@
+.venv/
+chroma_store/
+workflows/
+__pycache__/
+*.pyc
+.env
+.git/
+.gitignore
+*.log

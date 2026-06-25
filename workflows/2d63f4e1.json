@@ -1,0 +1,23 @@
+{
+  "id": "2d63f4e1",
+  "name": "character_extractor",
+  "description": "This workflow extracts characters from a given text",
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "text_analysis",
+      "tool_name": "ner",
+      "depends_on": [],
+      "input_map": {
+        "entity_types": [
+          "PERSON"
+        ]
+      },
+      "status": "pending",
+      "output": null,
+      "error": null
+    }
+  ],
+  "status": "pending",
+  "created_at": "2026-04-30T15:44:29.996247"
+}

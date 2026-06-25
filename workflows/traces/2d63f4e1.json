@@ -1,0 +1,51 @@
+{
+  "workflow_id": "2d63f4e1",
+  "workflow_name": "character_extractor",
+  "goal": "give me characters",
+  "steps_trace": [
+    {
+      "step_id": "step_1",
+      "step_name": "text_analysis",
+      "tool_name": "ner",
+      "input": {
+        "text": "Sundar Pichai visited Google's new office in London on March 5, 2026. He met with Microsoft CEO Satya Nadella to discuss an AI partnership. Both companies confirmed the deal would be announced at the World Economic Forum in Davos.",
+        "entity_types": [
+          "PERSON"
+        ]
+      },
+      "output": {
+        "entities": [
+          {
+            "text": "Sundar Pichai",
+            "type": "PERSON",
+            "start_index": 0
+          },
+          {
+            "text": "Satya Nadella",
+            "type": "PERSON",
+            "start_index": 56
+          }
+        ],
+        "entity_types_requested": [
+          "PERSON"
+        ]
+      },
+      "error": null,
+      "duration_ms": 395.61,
+      "retries": 0,
+      "status": "done"
+    }
+  ],
+  "reflections": [
+    {
+      "step_id": "step_1",
+      "goal_achieved": false,
+      "quality": "good",
+      "reason": "The text_analysis step produced useful output, but it does not directly provide characters as required by the overall goal.",
+      "should_continue": true
+    }
+  ],
+  "final_status": "done",
+  "total_duration_ms": 831.81,
+  "total_tokens_used": 0
+}
