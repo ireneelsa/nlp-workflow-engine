@@ -73,7 +73,7 @@ orjson==3.11.8
 overrides==7.7.0
 packaging==26.2
 paddleocr==2.7.3
-paddlepaddle==2.6.1
+paddlepaddle==2.6.2
 paddlex==3.6.1
 pandas==3.0.3
 pdf2image==1.17.0
