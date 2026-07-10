@@ -23,7 +23,20 @@ import chromadb
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 100
 
-CHROMA_PATH = "./chroma_store"
+CHROMA_PATH = os.getenv("CHROMA_PATH", "./chroma_store")
+RESEARCH_COLLECTION = "research_papers"
+
+
+def clean_collection_name(filename: str) -> str:
+    name = re.sub(r'[^a-zA-Z0-9_-]', '_', filename.replace('.', '_'))
+    name = re.sub(r'_+', '_', name)
+    name = name.strip('_-')
+    if not name or not name[0].isalnum():
+        name = 'col_' + name
+    if not name[-1].isalnum():
+        name = name.rstrip('_-') + '_x'
+    return name[:200]
+
 
 # Lazy globals
 ocr = None
@@ -143,11 +156,9 @@ class DocumentIndexer:
 
     def _generate_doc_summary(self, full_text: str) -> str:
         try:
-            import google.generativeai as genai
-            import os
-            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+            from src.vertex_client import get_gemini_model
             logger.info(f"[indexer] Generating summary for {len(full_text)} chars...")
-            model = genai.GenerativeModel("models/gemini-2.5-flash-lite")
+            model = get_gemini_model("gemini-2.5-flash-lite")
             response = self._call_gemini_with_retry(
                 lambda: model.generate_content(
                     f"Summarize this document in 2-4 lines only:\n\n{full_text[:8000]}"
@@ -162,9 +173,8 @@ class DocumentIndexer:
 
     def _classify_topic(self, full_text: str) -> str:
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            model = genai.GenerativeModel("gemini-2.0-flash")
+            from src.vertex_client import get_gemini_model
+            model = get_gemini_model("gemini-2.5-flash-lite")
             response = self._call_gemini_with_retry(
                 lambda: model.generate_content(
                     "Classify this document into ONE short topic category "
@@ -251,25 +261,29 @@ class DocumentIndexer:
             "If it contains text, summarize what the text says."
         )
 
-        response = client.chat.completions.create(
-            model="meta-llama/llama-4-scout-17b-16e-instruct",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{encoded_string}"
+        try:
+            response = client.chat.completions.create(
+                model="meta-llama/llama-4-scout-17b-16e-instruct",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{encoded_string}"
+                                }
                             }
-                        }
-                    ]
-                }
-            ],
-            max_tokens=1024
-        )
-        llava_description = response.choices[0].message.content.strip()
+                        ]
+                    }
+                ],
+                max_tokens=1024
+            )
+            llava_description = response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.warning(f"[indexer] Groq Vision API call failed, skipping visual description: {e}")
+            llava_description = ""
 
         # 4. Combine both outputs
         combined = f"OCR Text:\n{ocr_text}\n\nVisual Description:\n{llava_description}"
@@ -624,11 +638,9 @@ class DocumentIndexer:
         return total_stored
 
     def index_file(self, file_path: str, collection_name: str = None) -> Dict:
-        filename = os.path.basename(file_path)
-        if not collection_name:
-            collection_name = re.sub(r'[^a-zA-Z0-9_-]', '_', filename.replace('.', '_'))
-            collection_name = re.sub(r'_+', '_', collection_name)
-            collection_name = collection_name.strip('_')[:200]
+        filename_only = os.path.basename(file_path)
+        collection_name = clean_collection_name(filename_only)
+        logger.info(f"[indexer] Filename: {filename_only}, Collection: {collection_name}")
 
         file_type = detect_file_type(file_path)
         logger.info(f"[indexer] Detected: {file_type} → routing to correct pipeline")
@@ -663,3 +675,105 @@ class DocumentIndexer:
 
     def delete_collection(self, collection_name: str) -> None:
         self.chroma.delete_collection(collection_name)
+
+    def index_file_to_research(self, file_path: str, filename: str) -> dict:
+        """Index a file into the shared research_papers collection.
+
+        Uses the same extraction pipeline as index_file() but stores all chunks
+        into a single shared collection with 'source' and 'collection_name' metadata
+        so individual papers can be queried or deleted by filter.
+        """
+        try:
+            import shutil
+            import tempfile as _tempfile
+
+            self._ensure_embed_fn()
+            if self._embed_init_error:
+                raise RuntimeError(f"Embedding initialization failed: {self._embed_init_error}")
+
+            # Copy to a temp dir under the original filename so os.path.basename()
+            # inside the existing process_* methods records the correct 'source'.
+            tmp_dir = _tempfile.mkdtemp()
+            named_tmp = os.path.join(tmp_dir, filename)
+            staging_coll = clean_collection_name(os.path.basename(filename))
+
+            try:
+                shutil.copy2(file_path, named_tmp)
+                result = self.index_file(named_tmp)
+
+                staging_col = self.chroma.get_collection(name=staging_coll)
+                data = staging_col.get(include=["documents", "metadatas", "embeddings"])
+                docs = data.get("documents") or []
+                metas = data.get("metadatas") or [{} for _ in docs]
+            finally:
+                try:
+                    self.chroma.delete_collection(staging_coll)
+                except Exception:
+                    pass
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+
+            if not docs:
+                return {
+                    "chunks": 0,
+                    "source": filename,
+                    "collection": RESEARCH_COLLECTION,
+                    "file_type": result.get("file_type", "unknown"),
+                }
+
+            # Add collection_name to each chunk's metadata so delete-by-paper works
+            filename_only = os.path.basename(filename)
+            cleaned_name = clean_collection_name(filename_only)
+            logger.info(f"[indexer] Collection name: {cleaned_name}")
+            for meta in metas:
+                meta["collection_name"] = cleaned_name
+
+            from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
+            embed_fn = ONNXMiniLM_L6_V2()
+            research_col = self.chroma.get_or_create_collection(
+                name=RESEARCH_COLLECTION,
+                embedding_function=embed_fn,
+            )
+
+            research_col.add(
+                documents=docs,
+                metadatas=metas,
+                ids=[str(uuid.uuid4()) for _ in docs],
+            )
+            logger.info(f"[indexer] Added {len(docs)} chunks for '{filename}' to '{RESEARCH_COLLECTION}'")
+
+            return {
+                "chunks": len(docs),
+                "source": filename,
+                "collection": RESEARCH_COLLECTION,
+                "file_type": result.get("file_type", "unknown"),
+            }
+        except TypeError as e:
+            import traceback
+            logger.error(f"[indexer] TypeError in index_file_to_research: {e}")
+            logger.error(traceback.format_exc())
+            raise
+
+    def delete_paper_chunks(self, collection_name: str) -> int:
+        """Delete all chunks for a paper from research_papers via metadata filter.
+
+        Also falls back to deleting a legacy standalone collection of the same name.
+        Returns the number of chunks removed from research_papers.
+        """
+        deleted = 0
+        try:
+            research_col = self.chroma.get_collection(name=RESEARCH_COLLECTION)
+            before = research_col.count()
+            research_col.delete(where={"collection_name": collection_name})
+            after = research_col.count()
+            deleted = before - after
+            logger.info(
+                f"[indexer] Deleted {deleted} chunks for '{collection_name}' from {RESEARCH_COLLECTION}"
+            )
+        except Exception:
+            pass
+        try:
+            self.chroma.delete_collection(collection_name)
+            logger.info(f"[indexer] Deleted standalone collection '{collection_name}'")
+        except Exception:
+            pass
+        return deleted
