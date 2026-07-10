@@ -1,4 +1,4 @@
-import os, sys, re
+import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from fastapi import FastAPI, HTTPException
@@ -17,6 +17,7 @@ from src.models import AgentState
 from src.workflow_store import save_trace, list_workflows, load_workflow
 
 from src.indexer import DocumentIndexer
+from src.paper_store import upload_paper, delete_paper, list_papers, collection_name_for_filename
 from fastapi import UploadFile, File
 import tempfile
 
@@ -41,8 +42,8 @@ registry = build_default_registry()
 # ── Request / Response models ──────────────────────────────────────────
 
 class RunRequest(BaseModel):
-    goal: str
-    text: str
+    goal: str = ""
+    text: str = ""
     max_sentences: Optional[int] = 3
 
 class StepResult(BaseModel):
@@ -194,7 +195,7 @@ class UploadResponse(BaseModel):
 
 class QuestionRequest(BaseModel):
     question: str
-    collection_name: str
+    collection_name: Optional[str] = None
     topic_filter: Optional[str] = None
 
 class QuestionResponse(BaseModel):
@@ -202,23 +203,9 @@ class QuestionResponse(BaseModel):
     chunks_used: int
     collection: str
     chunk_types_used: list[str]
+    sources: list[str]
     duration_ms: float
 
-
-def _collection_name_for_file(filename: str, used_names: set[str]) -> str:
-    base_name = os.path.basename(filename or "uploaded_file")
-    collection_name = re.sub(r'[^a-zA-Z0-9_-]', '_', base_name.replace('.', '_'))
-    collection_name = re.sub(r'_+', '_', collection_name)
-    collection_name = collection_name.strip('_')[:200]
-    candidate = collection_name
-    suffix = 2
-
-    while candidate in used_names:
-        candidate = f"{collection_name}_{suffix}"
-        suffix += 1
-
-    used_names.add(candidate)
-    return candidate
 
 
 @app.post("/upload", response_model=UploadResponse)
@@ -246,12 +233,10 @@ async def upload_document(files: List[UploadFile] = File(...)):
             file_payloads.append((file.filename, ext, content))
 
         indexer = DocumentIndexer()
-        used_collection_names = set()
         upload_results = []
 
         for filename, ext, content in file_payloads:
             logger.info(f"[api] Uploading file: {filename}")
-            collection_name = _collection_name_for_file(filename, used_collection_names)
             tmp_path = None
 
             try:
@@ -259,13 +244,18 @@ async def upload_document(files: List[UploadFile] = File(...)):
                     tmp.write(content)
                     tmp_path = tmp.name
 
-                result = indexer.index_file(tmp_path, collection_name=collection_name)
+                base = os.path.basename(filename)
+                result = indexer.index_file_to_research(tmp_path, base)
                 upload_results.append(FileIndexResult(
                     filename=filename,
-                    collection_name=result["collection_name"],
+                    collection_name=collection_name_for_filename(base),
                     file_type=result["file_type"],
                     chunks=result["chunks"]
                 ))
+                if ext == ".pdf":
+                    ok = upload_paper(tmp_path, filename)
+                    if not ok:
+                        logger.warning(f"[api] HF Dataset upload skipped or failed for '{filename}'")
             finally:
                 if tmp_path and os.path.exists(tmp_path):
                     try:
@@ -295,7 +285,7 @@ def ask_question(req: QuestionRequest):
 
     result = registry.run_tool("rag", {
         "question": req.question,
-        "collection_name": req.collection_name,
+        "collection_name": req.collection_name or "research_papers",
         "topic_filter": req.topic_filter
     })
 
@@ -307,24 +297,47 @@ def ask_question(req: QuestionRequest):
         chunks_used=result.output["chunks_used"],
         collection=result.output["collection"],
         chunk_types_used=result.output.get("chunk_types_used", []),
+        sources=result.output.get("sources", []),
         duration_ms=result.duration_ms
     )
 
 
 @app.get("/collections")
 def get_collections():
-    """List all indexed document collections."""
-    indexer = DocumentIndexer()
-    collections = indexer.list_collections()
-    return {"collections": collections, "count": len(collections)}
+    """List unique source filenames indexed in the research_papers collection."""
+    try:
+        indexer = DocumentIndexer()
+        collection = indexer.chroma.get_collection("research_papers")
+        results = collection.get(include=["metadatas"])
+        sources = list(set(
+            m.get("source", "")
+            for m in results["metadatas"]
+            if m and m.get("source")
+        ))
+        return {"collections": sources, "count": len(sources)}
+    except Exception:
+        return {"collections": [], "count": 0}
 
 
 @app.delete("/collections/{collection_name}")
 def delete_collection(collection_name: str):
-    """Delete an indexed document collection."""
+    """Delete all chunks for a paper from the research_papers collection."""
     try:
         indexer = DocumentIndexer()
-        indexer.delete_collection(collection_name)
+        deleted_count = indexer.delete_paper_chunks(collection_name)
+        logger.info(f"[api] Deleted {deleted_count} chunks for '{collection_name}'")
+        try:
+            papers = list_papers()
+            for filename in papers:
+                if collection_name_for_filename(filename) == collection_name:
+                    ok = delete_paper(filename)
+                    if not ok:
+                        logger.warning(f"[api] HF Dataset delete failed for '{filename}'")
+                    break
+            else:
+                logger.info(f"[api] No matching PDF in HF Dataset for collection '{collection_name}'")
+        except Exception as e:
+            logger.warning(f"[api] HF Dataset delete lookup failed: {e}")
         return {"deleted": collection_name, "success": True}
     except Exception as e:
         logger.error(f"[api] Delete collection failed: {e}")

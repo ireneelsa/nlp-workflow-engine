@@ -4,3 +4,5 @@ __pycache__/
 .env
 workflows/
 chroma_store/
+vertex_credentials.json
+papers/*.pdf
