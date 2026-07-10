@@ -303,9 +303,7 @@ function formatOutput(output) {
 
     <div id="ragSection" style="display:none">
       <hr style="border-color:#2d3148; margin: 16px 0"/>
-      <label>Select uploaded collection</label>
-      <select id="collectionSelect" style="margin-bottom:12px"></select>
-      <label>Ask a question about your document</label>
+      <label>Ask a question about your documents</label>
       <input type="text" id="ragQuestion"
         placeholder="e.g. What are the main findings?"/>
       <div style="margin-top:8px">
@@ -330,6 +328,9 @@ function formatOutput(output) {
         class="step-card" style="margin-top:14px">
         <div class="step-name">Answer</div>
         <div class="step-output" id="ragAnswerText"></div>
+        <div id="ragSources" style="font-size:12px; color:#64748b; margin-top:8px; display:none">
+          Answer sourced from: <span id="ragSourcesList"></span>
+        </div>
         <div class="step-ms" id="ragMeta"></div>
       </div>
     </div>
@@ -380,7 +381,6 @@ async function uploadFile() {
     });
 
     renderUploadResults(allCollections);
-    renderCollectionOptions(allCollections);
 
     status.textContent = `Indexed ${data.total_files} files with ${data.total_chunks} total chunks. Ready to answer questions.`;
     status.style.color = "#4ade80";
@@ -414,14 +414,6 @@ function renderUploadResults(results) {
   uploadResults.style.display = results.length ? "block" : "none";
 }
 
-function renderCollectionOptions(results) {
-  const select = document.getElementById("collectionSelect");
-  select.innerHTML = results.map(result => `
-    <option value="${escapeHtml(result.collection_name)}">
-      ${escapeHtml(result.filename)} (${escapeHtml(result.collection_name)})
-    </option>
-  `).join("");
-}
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, char => ({
@@ -444,7 +436,6 @@ async function deleteCollection(collectionName) {
     }
     allCollections = allCollections.filter(c => c.collection_name !== collectionName);
     renderUploadResults(allCollections);
-    renderCollectionOptions(allCollections);
     if (allCollections.length === 0) {
       document.getElementById("ragSection").style.display = "none";
       document.getElementById("uploadResults").style.display = "none";
@@ -460,19 +451,18 @@ async function loadExistingCollections() {
     if (!res.ok) return;
     const data = await res.json();
     if (!data.collections || !data.collections.length) return;
-    data.collections.forEach(name => {
-      if (!allCollections.find(c => c.collection_name === name)) {
-        allCollections.push({
-          filename: name,
-          collection_name: name,
-          file_type: "Previously indexed",
-          chunks: "–"
-        });
-      }
-    });
-    renderUploadResults(allCollections);
-    renderCollectionOptions(allCollections);
-    document.getElementById("uploadResults").style.display = "block";
+    const uploadResults = document.getElementById("uploadResults");
+    uploadResults.innerHTML = data.collections.map(filename => {
+      const ext = (filename.split('.').pop() || 'file').toLowerCase();
+      return `<div class="step-card">
+        <div class="step-top">
+          <span class="step-name">${escapeHtml(filename)}</span>
+          <span class="step-tool">${escapeHtml(ext)}</span>
+        </div>
+        <div class="step-output">Previously indexed</div>
+      </div>`;
+    }).join("");
+    uploadResults.style.display = "block";
     document.getElementById("ragSection").style.display = "block";
   } catch (e) {
     // Silently fail — server may not be ready
@@ -484,22 +474,17 @@ window.onload = loadExistingCollections;
 async function askQuestion() {
   const question = document.getElementById("ragQuestion").value.trim();
   const status = document.getElementById("ragStatus");
-  const collectionName = document.getElementById("collectionSelect").value;
 
   if (!question) { alert("Please enter a question"); return; }
-  if (!collectionName) { alert("Please upload a document first"); return; }
 
-  status.textContent = "Searching document...";
+  status.textContent = "Searching research papers...";
   status.style.color = "#94a3b8";
 
   try {
     const res = await fetch("/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question: question,
-        collection_name: collectionName
-      })
+      body: JSON.stringify({ question: question })
     });
 
     if (!res.ok) {
@@ -512,8 +497,14 @@ async function askQuestion() {
     document.getElementById("ragAnswer").style.display = "block";
     document.getElementById("ragAnswerText").textContent = data.answer;
     document.getElementById("ragMeta").textContent =
-      `${data.duration_ms}ms · ${data.chunks_used} chunks searched · collection: ${data.collection}`;
-
+      `${data.duration_ms}ms · ${data.chunks_used} chunks searched`;
+    const sourcesEl = document.getElementById("ragSources");
+    if (data.sources && data.sources.length) {
+      sourcesEl.style.display = "block";
+      document.getElementById("ragSourcesList").textContent = data.sources.join(", ");
+    } else {
+      sourcesEl.style.display = "none";
+    }
   } catch (e) {
     status.textContent = "Error: " + e.message;
     status.style.color = "#f87171";
